@@ -3,71 +3,89 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert,
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuthStore } from '@/stores/authStore';
-import { GraduationCap, Mail, Phone, Hash, Eye, EyeOff, Shield } from 'lucide-react-native';
+import { GraduationCap, Mail, User, Phone, Hash, Eye, EyeOff, Shield, Building } from 'lucide-react-native';
 
 export default function AuthScreen() {
-  const [loginMethod, setLoginMethod] = useState<'email' | 'otp' | 'id'>('email');
+  const [isLogin, setIsLogin] = useState(true);
   const [role, setRole] = useState<'faculty' | 'student'>('student');
   const [formData, setFormData] = useState({
+    name: '',
     email: '',
     password: '',
+    confirmPassword: '',
     phone: '',
-    otp: '',
-    id: '',
+    department: '',
+    studentId: '',
+    facultyId: '',
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [otpSent, setOtpSent] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const { login, loginWithOTP, loginWithId } = useAuthStore();
+  const { login, signup } = useAuthStore();
 
-  const handleLogin = async () => {
+  const handleSubmit = async () => {
     setLoading(true);
     try {
-      switch (loginMethod) {
-        case 'email':
-          if (!formData.email || !formData.password) {
-            Alert.alert('Error', 'Please fill in all fields');
-            return;
-          }
-          await login(formData.email, formData.password, role);
-          break;
-        case 'otp':
-          if (!otpSent) {
-            if (!formData.phone) {
-              Alert.alert('Error', 'Please enter phone number');
-              return;
-            }
-            // Simulate OTP sending
-            setOtpSent(true);
-            Alert.alert('OTP Sent', 'Enter 123456 to login');
-            return;
-          } else {
-            if (!formData.otp) {
-              Alert.alert('Error', 'Please enter OTP');
-              return;
-            }
-            await loginWithOTP(formData.phone, formData.otp, role);
-          }
-          break;
-        case 'id':
-          if (!formData.id) {
-            Alert.alert('Error', 'Please enter your ID');
-            return;
-          }
-          await loginWithId(formData.id, role);
-          break;
+      if (isLogin) {
+        if (!formData.email || !formData.password) {
+          Alert.alert('Error', 'Please fill in all fields');
+          return;
+        }
+        await login(formData.email, formData.password);
+      } else {
+        // Signup validation
+        if (!formData.name || !formData.email || !formData.password || !formData.department) {
+          Alert.alert('Error', 'Please fill in all required fields');
+          return;
+        }
+        
+        if (formData.password !== formData.confirmPassword) {
+          Alert.alert('Error', 'Passwords do not match');
+          return;
+        }
+        
+        if (formData.password.length < 6) {
+          Alert.alert('Error', 'Password must be at least 6 characters');
+          return;
+        }
+
+        const userData = {
+          name: formData.name,
+          email: formData.email,
+          role,
+          department: formData.department,
+          phone: formData.phone || undefined,
+          studentId: role === 'student' ? formData.studentId || undefined : undefined,
+          facultyId: role === 'faculty' ? formData.facultyId || undefined : undefined,
+        };
+
+        await signup(userData);
+        Alert.alert('Success', 'Account created successfully!');
       }
     } catch (error: any) {
-      Alert.alert('Login Failed', error.message);
+      Alert.alert(isLogin ? 'Login Failed' : 'Signup Failed', error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const resetOTP = () => {
-    setOtpSent(false);
-    setFormData(prev => ({ ...prev, otp: '' }));
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      phone: '',
+      department: '',
+      studentId: '',
+      facultyId: '',
+    });
+  };
+
+  const switchMode = () => {
+    setIsLogin(!isLogin);
+    resetForm();
   };
 
   return (
@@ -87,6 +105,28 @@ export default function AuthScreen() {
             </LinearGradient>
             <Text style={styles.appName}>GOLEA</Text>
             <Text style={styles.appTagline}>Smart Learning Management System</Text>
+          </View>
+
+          {/* Auth Mode Toggle */}
+          <View style={styles.modeSection}>
+            <View style={styles.modeButtons}>
+              <TouchableOpacity
+                style={[styles.modeButton, isLogin && styles.modeButtonActive]}
+                onPress={() => setIsLogin(true)}
+              >
+                <Text style={[styles.modeButtonText, isLogin && styles.modeButtonTextActive]}>
+                  Login
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modeButton, !isLogin && styles.modeButtonActive]}
+                onPress={() => setIsLogin(false)}
+              >
+                <Text style={[styles.modeButtonText, !isLogin && styles.modeButtonTextActive]}>
+                  Sign Up
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Role Selection */}
@@ -122,177 +162,142 @@ export default function AuthScreen() {
             </View>
           </View>
 
-          {/* Login Method Selection */}
-          <View style={styles.methodSection}>
-            <Text style={styles.sectionTitle}>Login Method</Text>
-            <View style={styles.methodButtons}>
+          {/* Form */}
+          <View style={styles.formSection}>
+            {!isLogin && (
+              <View style={styles.inputContainer}>
+                <User size={20} color="#64748b" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Full Name"
+                  placeholderTextColor="#94a3b8"
+                  value={formData.name}
+                  onChangeText={(text) => setFormData(prev => ({ ...prev, name: text }))}
+                />
+              </View>
+            )}
+
+            <View style={styles.inputContainer}>
+              <Mail size={20} color="#64748b" style={styles.inputIcon} />
+              <TextInput
+                style={styles.textInput}
+                placeholder="Email Address"
+                placeholderTextColor="#94a3b8"
+                value={formData.email}
+                onChangeText={(text) => setFormData(prev => ({ ...prev, email: text }))}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Shield size={20} color="#64748b" style={styles.inputIcon} />
+              <TextInput
+                style={[styles.textInput, { flex: 1 }]}
+                placeholder="Password"
+                placeholderTextColor="#94a3b8"
+                value={formData.password}
+                onChangeText={(text) => setFormData(prev => ({ ...prev, password: text }))}
+                secureTextEntry={!showPassword}
+              />
               <TouchableOpacity
-                style={[styles.methodButton, loginMethod === 'email' && styles.methodButtonActive]}
-                onPress={() => {
-                  setLoginMethod('email');
-                  resetOTP();
-                }}
+                onPress={() => setShowPassword(!showPassword)}
+                style={styles.eyeButton}
               >
-                <Mail size={20} color={loginMethod === 'email' ? '#667eea' : '#64748b'} />
-                <Text style={[styles.methodButtonText, loginMethod === 'email' && styles.methodButtonTextActive]}>
-                  Email
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.methodButton, loginMethod === 'otp' && styles.methodButtonActive]}
-                onPress={() => {
-                  setLoginMethod('otp');
-                  resetOTP();
-                }}
-              >
-                <Phone size={20} color={loginMethod === 'otp' ? '#667eea' : '#64748b'} />
-                <Text style={[styles.methodButtonText, loginMethod === 'otp' && styles.methodButtonTextActive]}>
-                  OTP
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.methodButton, loginMethod === 'id' && styles.methodButtonActive]}
-                onPress={() => {
-                  setLoginMethod('id');
-                  resetOTP();
-                }}
-              >
-                <Hash size={20} color={loginMethod === 'id' ? '#667eea' : '#64748b'} />
-                <Text style={[styles.methodButtonText, loginMethod === 'id' && styles.methodButtonTextActive]}>
-                  ID
-                </Text>
+                {showPassword ? (
+                  <EyeOff size={20} color="#64748b" />
+                ) : (
+                  <Eye size={20} color="#64748b" />
+                )}
               </TouchableOpacity>
             </View>
-          </View>
 
-          {/* Login Form */}
-          <View style={styles.formSection}>
-            {loginMethod === 'email' && (
+            {!isLogin && (
               <>
-                <View style={styles.inputContainer}>
-                  <Mail size={20} color="#64748b" style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder="Email Address"
-                    placeholderTextColor="#94a3b8"
-                    value={formData.email}
-                    onChangeText={(text) => setFormData(prev => ({ ...prev, email: text }))}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                  />
-                </View>
                 <View style={styles.inputContainer}>
                   <Shield size={20} color="#64748b" style={styles.inputIcon} />
                   <TextInput
                     style={[styles.textInput, { flex: 1 }]}
-                    placeholder="Password"
+                    placeholder="Confirm Password"
                     placeholderTextColor="#94a3b8"
-                    value={formData.password}
-                    onChangeText={(text) => setFormData(prev => ({ ...prev, password: text }))}
-                    secureTextEntry={!showPassword}
+                    value={formData.confirmPassword}
+                    onChangeText={(text) => setFormData(prev => ({ ...prev, confirmPassword: text }))}
+                    secureTextEntry={!showConfirmPassword}
                   />
                   <TouchableOpacity
-                    onPress={() => setShowPassword(!showPassword)}
+                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
                     style={styles.eyeButton}
                   >
-                    {showPassword ? (
+                    {showConfirmPassword ? (
                       <EyeOff size={20} color="#64748b" />
                     ) : (
                       <Eye size={20} color="#64748b" />
                     )}
                   </TouchableOpacity>
                 </View>
-              </>
-            )}
 
-            {loginMethod === 'otp' && (
-              <>
+                <View style={styles.inputContainer}>
+                  <Building size={20} color="#64748b" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="Department"
+                    placeholderTextColor="#94a3b8"
+                    value={formData.department}
+                    onChangeText={(text) => setFormData(prev => ({ ...prev, department: text }))}
+                  />
+                </View>
+
                 <View style={styles.inputContainer}>
                   <Phone size={20} color="#64748b" style={styles.inputIcon} />
                   <TextInput
                     style={styles.textInput}
-                    placeholder="Phone Number"
+                    placeholder="Phone Number (Optional)"
                     placeholderTextColor="#94a3b8"
                     value={formData.phone}
                     onChangeText={(text) => setFormData(prev => ({ ...prev, phone: text }))}
                     keyboardType="phone-pad"
-                    editable={!otpSent}
                   />
                 </View>
-                {otpSent && (
-                  <View style={styles.inputContainer}>
-                    <Hash size={20} color="#64748b" style={styles.inputIcon} />
-                    <TextInput
-                      style={styles.textInput}
-                      placeholder="Enter OTP"
-                      placeholderTextColor="#94a3b8"
-                      value={formData.otp}
-                      onChangeText={(text) => setFormData(prev => ({ ...prev, otp: text }))}
-                      keyboardType="numeric"
-                      maxLength={6}
-                    />
-                  </View>
-                )}
+
+                <View style={styles.inputContainer}>
+                  <Hash size={20} color="#64748b" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder={role === 'faculty' ? "Faculty ID (Optional)" : "Student ID (Optional)"}
+                    placeholderTextColor="#94a3b8"
+                    value={role === 'faculty' ? formData.facultyId : formData.studentId}
+                    onChangeText={(text) => setFormData(prev => ({ 
+                      ...prev, 
+                      [role === 'faculty' ? 'facultyId' : 'studentId']: text 
+                    }))}
+                    autoCapitalize="characters"
+                  />
+                </View>
               </>
             )}
 
-            {loginMethod === 'id' && (
-              <View style={styles.inputContainer}>
-                <Hash size={20} color="#64748b" style={styles.inputIcon} />
-                <TextInput
-                  style={styles.textInput}
-                  placeholder={role === 'faculty' ? "Faculty ID (e.g., FAC001)" : "Student ID (e.g., STU001)"}
-                  placeholderTextColor="#94a3b8"
-                  value={formData.id}
-                  onChangeText={(text) => setFormData(prev => ({ ...prev, id: text }))}
-                  autoCapitalize="characters"
-                />
-              </View>
-            )}
-
-            {/* Login Button */}
+            {/* Submit Button */}
             <TouchableOpacity
-              style={styles.loginButton}
-              onPress={handleLogin}
+              style={styles.submitButton}
+              onPress={handleSubmit}
               disabled={loading}
             >
               <LinearGradient
                 colors={['#667eea', '#764ba2']}
-                style={styles.loginButtonGradient}
+                style={styles.submitButtonGradient}
               >
-                <Text style={styles.loginButtonText}>
-                  {loading ? 'Please Wait...' : 
-                   loginMethod === 'otp' && !otpSent ? 'Send OTP' : 'Login'}
+                <Text style={styles.submitButtonText}>
+                  {loading ? 'Please Wait...' : isLogin ? 'Login' : 'Create Account'}
                 </Text>
               </LinearGradient>
             </TouchableOpacity>
 
-            {otpSent && (
-              <TouchableOpacity onPress={resetOTP} style={styles.linkButton}>
-                <Text style={styles.linkButtonText}>Change Phone Number</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-
-          {/* Demo Credentials */}
-          <View style={styles.demoSection}>
-            <Text style={styles.demoTitle}>Demo Credentials</Text>
-            <View style={styles.demoCredentials}>
-              <View style={styles.demoRole}>
-                <Text style={styles.demoRoleTitle}>Faculty:</Text>
-                <Text style={styles.demoText}>Email: sarah.johnson@university.edu</Text>
-                <Text style={styles.demoText}>Password: password123</Text>
-                <Text style={styles.demoText}>ID: FAC001</Text>
-                <Text style={styles.demoText}>Phone: +1234567890 (OTP: 123456)</Text>
-              </View>
-              <View style={styles.demoRole}>
-                <Text style={styles.demoRoleTitle}>Student:</Text>
-                <Text style={styles.demoText}>Email: john.doe@student.edu</Text>
-                <Text style={styles.demoText}>Password: password123</Text>
-                <Text style={styles.demoText}>ID: STU001</Text>
-                <Text style={styles.demoText}>Phone: +1234567892 (OTP: 123456)</Text>
-              </View>
-            </View>
+            {/* Switch Mode */}
+            <TouchableOpacity onPress={switchMode} style={styles.switchButton}>
+              <Text style={styles.switchButtonText}>
+                {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Login"}
+              </Text>
+            </TouchableOpacity>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -343,6 +348,37 @@ const styles = StyleSheet.create({
     color: '#64748b',
     textAlign: 'center',
   },
+  modeSection: {
+    marginBottom: 32,
+  },
+  modeButtons: {
+    flexDirection: 'row',
+    backgroundColor: '#f1f5f9',
+    borderRadius: 16,
+    padding: 4,
+  },
+  modeButton: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderRadius: 12,
+  },
+  modeButtonActive: {
+    backgroundColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  modeButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#64748b',
+  },
+  modeButtonTextActive: {
+    color: '#667eea',
+  },
   roleSection: {
     marginBottom: 32,
   },
@@ -380,38 +416,6 @@ const styles = StyleSheet.create({
   roleButtonTextActive: {
     color: 'white',
   },
-  methodSection: {
-    marginBottom: 32,
-  },
-  methodButtons: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  methodButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    backgroundColor: 'white',
-    borderWidth: 2,
-    borderColor: '#e2e8f0',
-    gap: 8,
-  },
-  methodButtonActive: {
-    borderColor: '#667eea',
-    backgroundColor: '#667eea10',
-  },
-  methodButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#64748b',
-  },
-  methodButtonTextActive: {
-    color: '#667eea',
-  },
   formSection: {
     marginBottom: 32,
   },
@@ -442,63 +446,28 @@ const styles = StyleSheet.create({
   eyeButton: {
     padding: 4,
   },
-  loginButton: {
+  submitButton: {
     borderRadius: 16,
     overflow: 'hidden',
     marginTop: 8,
   },
-  loginButtonGradient: {
+  submitButtonGradient: {
     paddingVertical: 18,
     alignItems: 'center',
   },
-  loginButtonText: {
+  submitButtonText: {
     fontSize: 18,
     fontWeight: '700',
     color: 'white',
   },
-  linkButton: {
+  switchButton: {
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 16,
     marginTop: 8,
   },
-  linkButtonText: {
+  switchButtonText: {
     fontSize: 14,
     color: '#667eea',
     fontWeight: '600',
-  },
-  demoSection: {
-    backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 20,
-    marginTop: 20,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
-  demoTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1e293b',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  demoCredentials: {
-    gap: 16,
-  },
-  demoRole: {
-    backgroundColor: '#f8fafc',
-    padding: 16,
-    borderRadius: 12,
-  },
-  demoRoleTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#667eea',
-    marginBottom: 8,
-  },
-  demoText: {
-    fontSize: 12,
-    color: '#64748b',
-    marginBottom: 4,
-    fontFamily: 'monospace',
   },
 });
