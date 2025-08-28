@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Modal, TextInput, Alert, Switch, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/stores/authStore';
-import { User, Mail, Phone, Calendar, MapPin, Award, Settings, Bell, Shield, CircleHelp as HelpCircle, LogOut, CreditCard as Edit, Camera, X, Save, BookOpen, Target, Clock, TrendingUp } from 'lucide-react-native';
+import { User, Mail, Phone, Calendar, MapPin, Settings, Bell, Shield, CircleHelp as HelpCircle, LogOut, CreditCard as Edit, Camera, X, Save, Building } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
@@ -46,30 +46,11 @@ export default function ProfileScreen() {
     Alert.alert('Success', 'Profile updated successfully');
   };
 
-  const studentStats = user?.role === 'student' ? [
-    { label: 'Courses Enrolled', value: '6', icon: BookOpen, color: '#667eea' },
-    { label: 'Assignments Done', value: '24', icon: Target, color: '#10b981' },
-    { label: 'Study Hours', value: '127h', icon: Clock, color: '#f59e0b' },
-    { label: 'Current GPA', value: '3.8', icon: TrendingUp, color: '#8b5cf6' },
-  ] : [
-    { label: 'Total Students', value: '142', icon: User, color: '#667eea' },
-    { label: 'Active Courses', value: '8', icon: BookOpen, color: '#10b981' },
-    { label: 'Materials Shared', value: '89', icon: Target, color: '#f59e0b' },
-    { label: 'Avg. Rating', value: '4.8', icon: TrendingUp, color: '#8b5cf6' },
-  ];
-
-  const achievements = [
-    { id: 1, title: 'Early Bird', description: 'Submitted assignments before deadline 5 times', icon: '🌅', earned: true },
-    { id: 2, title: 'Perfect Attendance', description: 'Attended all classes this month', icon: '📅', earned: true },
-    { id: 3, title: 'Top Performer', description: 'Scored above 90% in 3 consecutive tests', icon: '⭐', earned: false },
-    { id: 4, title: 'Helping Hand', description: 'Helped classmates in forum discussions', icon: '🤝', earned: true },
-  ];
-
   const menuItems = [
     { icon: Bell, title: 'Notifications', subtitle: 'Manage your notification preferences', action: () => setShowSettingsModal(true) },
-    { icon: Shield, title: 'Privacy & Security', subtitle: 'Manage your account security', action: () => console.log('Privacy') },
-    { icon: HelpCircle, title: 'Help & Support', subtitle: 'Get help and contact support', action: () => console.log('Help') },
-    { icon: Settings, title: 'App Settings', subtitle: 'Customize your app experience', action: () => console.log('Settings') },
+    { icon: Shield, title: 'Privacy & Security', subtitle: 'Manage your account security', action: () => Alert.alert('Coming Soon', 'Privacy settings coming soon!') },
+    { icon: HelpCircle, title: 'Help & Support', subtitle: 'Get help and contact support', action: () => Alert.alert('Coming Soon', 'Help center coming soon!') },
+    { icon: Settings, title: 'App Settings', subtitle: 'Customize your app experience', action: () => Alert.alert('Coming Soon', 'App settings coming soon!') },
   ];
 
   return (
@@ -109,9 +90,11 @@ export default function ProfileScreen() {
                 {user?.role === 'faculty' ? 'Faculty Member' : 'Student'}
               </Text>
               <Text style={styles.profileDepartment}>{user?.department}</Text>
-              <Text style={styles.profileId}>
-                {user?.role === 'faculty' ? user?.facultyId : user?.studentId}
-              </Text>
+              {(user?.studentId || user?.facultyId) && (
+                <Text style={styles.profileId}>
+                  {user?.role === 'faculty' ? user?.facultyId : user?.studentId}
+                </Text>
+              )}
               <Text style={styles.joinDate}>
                 Joined {user?.joinDate ? new Date(user.joinDate).toLocaleDateString('en-US', { 
                   month: 'long', 
@@ -120,27 +103,6 @@ export default function ProfileScreen() {
               </Text>
             </View>
           </LinearGradient>
-        </View>
-
-        {/* Stats */}
-        <View style={styles.statsSection}>
-          <Text style={styles.sectionTitle}>Overview</Text>
-          <View style={styles.statsGrid}>
-            {studentStats.map((stat, index) => (
-              <View key={index} style={styles.statCard}>
-                <LinearGradient
-                  colors={[stat.color + '15', stat.color + '05']}
-                  style={styles.statCardGradient}
-                >
-                  <View style={[styles.statIcon, { backgroundColor: stat.color }]}>
-                    <stat.icon size={20} color="white" />
-                  </View>
-                  <Text style={styles.statValue}>{stat.value}</Text>
-                  <Text style={styles.statLabel}>{stat.label}</Text>
-                </LinearGradient>
-              </View>
-            ))}
-          </View>
         </View>
 
         {/* Contact Information */}
@@ -162,7 +124,7 @@ export default function ProfileScreen() {
               </View>
             </View>
             <View style={styles.contactItem}>
-              <MapPin size={20} color="#667eea" />
+              <Building size={20} color="#667eea" />
               <View style={styles.contactContent}>
                 <Text style={styles.contactLabel}>Department</Text>
                 <Text style={styles.contactValue}>{user?.department}</Text>
@@ -179,45 +141,6 @@ export default function ProfileScreen() {
             </View>
           </View>
         </View>
-
-        {/* Achievements */}
-        {user?.role === 'student' && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Achievements</Text>
-            <View style={styles.achievementsContainer}>
-              {achievements.map((achievement) => (
-                <View 
-                  key={achievement.id} 
-                  style={[
-                    styles.achievementCard,
-                    !achievement.earned && styles.achievementCardLocked
-                  ]}
-                >
-                  <Text style={styles.achievementIcon}>{achievement.icon}</Text>
-                  <View style={styles.achievementContent}>
-                    <Text style={[
-                      styles.achievementTitle,
-                      !achievement.earned && styles.achievementTitleLocked
-                    ]}>
-                      {achievement.title}
-                    </Text>
-                    <Text style={[
-                      styles.achievementDescription,
-                      !achievement.earned && styles.achievementDescriptionLocked
-                    ]}>
-                      {achievement.description}
-                    </Text>
-                  </View>
-                  {achievement.earned && (
-                    <View style={styles.achievementBadge}>
-                      <Award size={16} color="#10b981" />
-                    </View>
-                  )}
-                </View>
-              ))}
-            </View>
-          </View>
-        )}
 
         {/* Menu Items */}
         <View style={styles.section}>
@@ -485,7 +408,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: 'rgba(255,255,255,0.7)',
   },
-  statsSection: {
+  section: {
     paddingHorizontal: 20,
     marginBottom: 20,
   },
@@ -494,49 +417,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#1e293b',
     marginBottom: 16,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  statCard: {
-    width: (width - 60) / 2,
-    borderRadius: 16,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  statCardGradient: {
-    padding: 20,
-    alignItems: 'center',
-  },
-  statIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#1e293b',
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#64748b',
-    textAlign: 'center',
-    fontWeight: '500',
-  },
-  section: {
-    paddingHorizontal: 20,
-    marginBottom: 20,
   },
   contactCard: {
     backgroundColor: 'white',
@@ -569,50 +449,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#1e293b',
     fontWeight: '500',
-  },
-  achievementsContainer: {
-    gap: 12,
-  },
-  achievementCard: {
-    backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  achievementCardLocked: {
-    opacity: 0.5,
-  },
-  achievementIcon: {
-    fontSize: 24,
-    marginRight: 16,
-  },
-  achievementContent: {
-    flex: 1,
-  },
-  achievementTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1e293b',
-    marginBottom: 2,
-  },
-  achievementTitleLocked: {
-    color: '#94a3b8',
-  },
-  achievementDescription: {
-    fontSize: 14,
-    color: '#64748b',
-  },
-  achievementDescriptionLocked: {
-    color: '#cbd5e1',
-  },
-  achievementBadge: {
-    marginLeft: 12,
   },
   menuContainer: {
     backgroundColor: 'white',
