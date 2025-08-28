@@ -1,16 +1,15 @@
 import { Tabs } from 'expo-router';
 import { useAuthStore } from '@/stores/authStore';
-import { Home, Users, BookOpen, Calendar, MessageCircle, User, Upload, BarChart3, CheckSquare, Settings } from 'lucide-react-native';
+import { Chrome as Home, BookOpen, Calendar, MessageCircle, User } from 'lucide-react-native';
 
 export default function TabLayout() {
   const { user } = useAuthStore();
-  const isFaculty = user?.role === 'faculty';
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#6366f1',
+        tabBarActiveTintColor: '#667eea',
         tabBarInactiveTintColor: '#64748b',
         tabBarStyle: {
           backgroundColor: '#ffffff',
@@ -35,58 +34,15 @@ export default function TabLayout() {
         }}
       />
       
-      {isFaculty ? (
-        <>
-          <Tabs.Screen
-            name="upload"
-            options={{
-              title: 'Upload',
-              tabBarIcon: ({ size, color }) => (
-                <Upload size={size} color={color} />
-              ),
-            }}
-          />
-          <Tabs.Screen
-            name="students"
-            options={{
-              title: 'Students',
-              tabBarIcon: ({ size, color }) => (
-                <Users size={size} color={color} />
-              ),
-            }}
-          />
-          <Tabs.Screen
-            name="analytics"
-            options={{
-              title: 'Analytics',
-              tabBarIcon: ({ size, color }) => (
-                <BarChart3 size={size} color={color} />
-              ),
-            }}
-          />
-        </>
-      ) : (
-        <>
-          <Tabs.Screen
-            name="courses"
-            options={{
-              title: 'Courses',
-              tabBarIcon: ({ size, color }) => (
-                <BookOpen size={size} color={color} />
-              ),
-            }}
-          />
-          <Tabs.Screen
-            name="assignments"
-            options={{
-              title: 'Tasks',
-              tabBarIcon: ({ size, color }) => (
-                <CheckSquare size={size} color={color} />
-              ),
-            }}
-          />
-        </>
-      )}
+      <Tabs.Screen
+        name="courses"
+        options={{
+          title: 'Courses',
+          tabBarIcon: ({ size, color }) => (
+            <BookOpen size={size} color={color} />
+          ),
+        }}
+      />
       
       <Tabs.Screen
         name="calendar"
@@ -97,15 +53,17 @@ export default function TabLayout() {
           ),
         }}
       />
+      
       <Tabs.Screen
         name="chat"
         options={{
-          title: 'Chat',
+          title: 'Messages',
           tabBarIcon: ({ size, color }) => (
             <MessageCircle size={size} color={color} />
           ),
         }}
       />
+      
       <Tabs.Screen
         name="profile"
         options={{
@@ -113,6 +71,32 @@ export default function TabLayout() {
           tabBarIcon: ({ size, color }) => (
             <User size={size} color={color} />
           ),
+        }}
+      />
+
+      {/* Hide unused tabs */}
+      <Tabs.Screen
+        name="upload"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="students"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="analytics"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="assignments"
+        options={{
+          href: null,
         }}
       />
     </Tabs>
