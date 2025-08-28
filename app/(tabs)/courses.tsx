@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput, Dimensions } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput, Dimensions, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Search, Filter, BookOpen, Clock, Users, Star, Play, Download, Eye } from 'lucide-react-native';
+import { Search, Filter, BookOpen, Plus, Users, Clock, Star } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
@@ -9,6 +9,7 @@ const { width } = Dimensions.get('window');
 export default function CoursesScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [courses, setCourses] = useState<any[]>([]);
 
   const categories = [
     { id: 'all', label: 'All Courses' },
@@ -18,75 +19,6 @@ export default function CoursesScreen() {
     { id: 'science', label: 'Science' },
   ];
 
-  const courses = [
-    {
-      id: 1,
-      title: 'Advanced Data Structures',
-      instructor: 'Dr. Sarah Johnson',
-      category: 'programming',
-      progress: 75,
-      totalLessons: 24,
-      completedLessons: 18,
-      duration: '8 weeks',
-      rating: 4.8,
-      students: 156,
-      color: '#3b82f6',
-      description: 'Deep dive into advanced data structures and algorithms',
-      nextLesson: 'Binary Trees Implementation',
-    },
-    {
-      id: 2,
-      title: 'Web Development Fundamentals',
-      instructor: 'Prof. Mike Chen',
-      category: 'programming',
-      progress: 45,
-      totalLessons: 32,
-      completedLessons: 14,
-      duration: '12 weeks',
-      rating: 4.9,
-      students: 203,
-      color: '#10b981',
-      description: 'Complete guide to modern web development',
-      nextLesson: 'React Components',
-    },
-    {
-      id: 3,
-      title: 'Database Design & Management',
-      instructor: 'Dr. Emma Davis',
-      category: 'programming',
-      progress: 60,
-      totalLessons: 20,
-      completedLessons: 12,
-      duration: '6 weeks',
-      rating: 4.7,
-      students: 89,
-      color: '#8b5cf6',
-      description: 'Master database concepts and SQL',
-      nextLesson: 'Advanced SQL Queries',
-    },
-    {
-      id: 4,
-      title: 'UI/UX Design Principles',
-      instructor: 'Prof. Alex Wilson',
-      category: 'design',
-      progress: 30,
-      totalLessons: 28,
-      completedLessons: 8,
-      duration: '10 weeks',
-      rating: 4.6,
-      students: 134,
-      color: '#f59e0b',
-      description: 'Learn modern design principles and practices',
-      nextLesson: 'Color Theory',
-    },
-  ];
-
-  const recentActivity = [
-    { id: 1, type: 'lesson', title: 'Hash Tables Implementation', course: 'Advanced Data Structures', time: '2 hours ago' },
-    { id: 2, type: 'assignment', title: 'Web Portfolio Project', course: 'Web Development', time: '5 hours ago' },
-    { id: 3, type: 'quiz', title: 'SQL Basics Quiz', course: 'Database Design', time: '1 day ago' },
-  ];
-
   const filteredCourses = courses.filter(course => {
     const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          course.instructor.toLowerCase().includes(searchQuery.toLowerCase());
@@ -94,13 +26,24 @@ export default function CoursesScreen() {
     return matchesSearch && matchesCategory;
   });
 
+  const handleCreateCourse = () => {
+    Alert.alert('Create Course', 'Course creation feature coming soon!');
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.content}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>My Courses</Text>
-          <Text style={styles.headerSubtitle}>Continue your learning journey</Text>
+          <View style={styles.headerTop}>
+            <View>
+              <Text style={styles.headerTitle}>Courses</Text>
+              <Text style={styles.headerSubtitle}>Explore and manage your learning</Text>
+            </View>
+            <TouchableOpacity style={styles.addButton} onPress={handleCreateCourse}>
+              <Plus size={20} color="#667eea" />
+            </TouchableOpacity>
+          </View>
           
           {/* Search Bar */}
           <View style={styles.searchContainer}>
@@ -115,7 +58,7 @@ export default function CoursesScreen() {
               />
             </View>
             <TouchableOpacity style={styles.filterButton}>
-              <Filter size={20} color="#6366f1" />
+              <Filter size={20} color="#667eea" />
             </TouchableOpacity>
           </View>
 
@@ -148,112 +91,82 @@ export default function CoursesScreen() {
           </ScrollView>
         </View>
 
-        {/* Courses Grid */}
-        <View style={styles.coursesSection}>
-          <Text style={styles.sectionTitle}>
-            {selectedCategory === 'all' ? 'All Courses' : categories.find(c => c.id === selectedCategory)?.label}
-          </Text>
-          {filteredCourses.map((course) => (
-            <TouchableOpacity key={course.id} style={styles.courseCard}>
-              <LinearGradient
-                colors={[course.color + '15', course.color + '05']}
-                style={styles.courseHeader}
-              >
-                <View style={styles.courseInfo}>
-                  <Text style={styles.courseTitle}>{course.title}</Text>
-                  <Text style={styles.courseInstructor}>{course.instructor}</Text>
-                  <Text style={styles.courseDescription}>{course.description}</Text>
-                </View>
-                <View style={[styles.courseIconContainer, { backgroundColor: course.color }]}>
-                  <BookOpen size={24} color="white" />
-                </View>
-              </LinearGradient>
-              
-              <View style={styles.courseContent}>
-                {/* Progress */}
-                <View style={styles.progressContainer}>
-                  <Text style={styles.progressText}>
-                    {course.completedLessons}/{course.totalLessons} lessons completed
-                  </Text>
-                  <View style={styles.progressBar}>
-                    <View style={[styles.progressFill, { width: `${course.progress}%`, backgroundColor: course.color }]} />
-                  </View>
-                  <Text style={styles.progressPercentage}>{course.progress}%</Text>
-                </View>
+        {/* Empty State */}
+        {filteredCourses.length === 0 && (
+          <View style={styles.emptyState}>
+            <LinearGradient
+              colors={['#667eea15', '#667eea05']}
+              style={styles.emptyStateCard}
+            >
+              <BookOpen size={64} color="#667eea" />
+              <Text style={styles.emptyStateTitle}>No Courses Yet</Text>
+              <Text style={styles.emptyStateText}>
+                {searchQuery 
+                  ? 'No courses match your search criteria' 
+                  : 'Start by creating or enrolling in courses'
+                }
+              </Text>
+              <TouchableOpacity style={styles.emptyStateButton} onPress={handleCreateCourse}>
+                <LinearGradient
+                  colors={['#667eea', '#764ba2']}
+                  style={styles.emptyStateButtonGradient}
+                >
+                  <Plus size={20} color="white" />
+                  <Text style={styles.emptyStateButtonText}>Get Started</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </LinearGradient>
+          </View>
+        )}
 
-                {/* Course Stats */}
-                <View style={styles.courseStats}>
-                  <View style={styles.statItem}>
-                    <Clock size={16} color="#64748b" />
-                    <Text style={styles.statText}>{course.duration}</Text>
+        {/* Courses List */}
+        {filteredCourses.length > 0 && (
+          <View style={styles.coursesSection}>
+            <Text style={styles.sectionTitle}>
+              {selectedCategory === 'all' ? 'All Courses' : categories.find(c => c.id === selectedCategory)?.label}
+            </Text>
+            {filteredCourses.map((course) => (
+              <TouchableOpacity key={course.id} style={styles.courseCard}>
+                <LinearGradient
+                  colors={[course.color + '15', course.color + '05']}
+                  style={styles.courseHeader}
+                >
+                  <View style={styles.courseInfo}>
+                    <Text style={styles.courseTitle}>{course.title}</Text>
+                    <Text style={styles.courseInstructor}>{course.instructor}</Text>
+                    <Text style={styles.courseDescription}>{course.description}</Text>
                   </View>
-                  <View style={styles.statItem}>
-                    <Users size={16} color="#64748b" />
-                    <Text style={styles.statText}>{course.students}</Text>
+                  <View style={[styles.courseIconContainer, { backgroundColor: course.color }]}>
+                    <BookOpen size={24} color="white" />
                   </View>
-                  <View style={styles.statItem}>
-                    <Star size={16} color="#fbbf24" />
-                    <Text style={styles.statText}>{course.rating}</Text>
+                </LinearGradient>
+                
+                <View style={styles.courseContent}>
+                  <View style={styles.courseStats}>
+                    <View style={styles.statItem}>
+                      <Clock size={16} color="#64748b" />
+                      <Text style={styles.statText}>{course.duration}</Text>
+                    </View>
+                    <View style={styles.statItem}>
+                      <Users size={16} color="#64748b" />
+                      <Text style={styles.statText}>{course.students}</Text>
+                    </View>
+                    <View style={styles.statItem}>
+                      <Star size={16} color="#fbbf24" />
+                      <Text style={styles.statText}>{course.rating}</Text>
+                    </View>
                   </View>
                 </View>
-
-                {/* Next Lesson */}
-                <View style={styles.nextLesson}>
-                  <View style={styles.nextLessonContent}>
-                    <Text style={styles.nextLessonLabel}>Next Lesson:</Text>
-                    <Text style={styles.nextLessonTitle}>{course.nextLesson}</Text>
-                  </View>
-                  <TouchableOpacity style={[styles.playButton, { backgroundColor: course.color }]}>
-                    <Play size={16} color="white" />
-                  </TouchableOpacity>
-                </View>
-
-                {/* Actions */}
-                <View style={styles.courseActions}>
-                  <TouchableOpacity style={styles.actionButton}>
-                    <Download size={18} color="#64748b" />
-                    <Text style={styles.actionText}>Download</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.actionButton}>
-                    <Eye size={18} color="#64748b" />
-                    <Text style={styles.actionText}>Preview</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Recent Activity */}
-        <View style={styles.activitySection}>
-          <Text style={styles.sectionTitle}>Recent Activity</Text>
-          {recentActivity.map((activity) => (
-            <TouchableOpacity key={activity.id} style={styles.activityCard}>
-              <View style={styles.activityIcon}>
-                <View style={[styles.activityDot, { backgroundColor: getActivityColor(activity.type) }]} />
-              </View>
-              <View style={styles.activityContent}>
-                <Text style={styles.activityTitle}>{activity.title}</Text>
-                <Text style={styles.activityMeta}>{activity.course} • {activity.time}</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
 
         <View style={{ height: 20 }} />
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const getActivityColor = (type: string) => {
-  switch (type) {
-    case 'lesson': return '#3b82f6';
-    case 'assignment': return '#10b981';
-    case 'quiz': return '#f59e0b';
-    default: return '#64748b';
-  }
-};
 
 const styles = StyleSheet.create({
   container: {
@@ -271,6 +184,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#e2e8f0',
   },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 20,
+  },
   headerTitle: {
     fontSize: 28,
     fontWeight: '700',
@@ -280,7 +199,11 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     fontSize: 16,
     color: '#64748b',
-    marginBottom: 20,
+  },
+  addButton: {
+    backgroundColor: '#f1f5f9',
+    borderRadius: 12,
+    padding: 12,
   },
   searchContainer: {
     flexDirection: 'row',
@@ -322,7 +245,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   categoryButtonActive: {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#667eea',
   },
   categoryText: {
     fontSize: 14,
@@ -330,6 +253,46 @@ const styles = StyleSheet.create({
     color: '#64748b',
   },
   categoryTextActive: {
+    color: 'white',
+  },
+  emptyState: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingVertical: 60,
+  },
+  emptyStateCard: {
+    borderRadius: 24,
+    padding: 40,
+    alignItems: 'center',
+  },
+  emptyStateTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1e293b',
+    marginTop: 20,
+    marginBottom: 8,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: '#64748b',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 24,
+  },
+  emptyStateButton: {
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  emptyStateButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    gap: 8,
+  },
+  emptyStateButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
     color: 'white',
   },
   coursesSection: {
@@ -386,33 +349,9 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 0,
   },
-  progressContainer: {
-    marginBottom: 20,
-  },
-  progressText: {
-    fontSize: 14,
-    color: '#64748b',
-    marginBottom: 8,
-  },
-  progressBar: {
-    height: 6,
-    backgroundColor: '#f1f5f9',
-    borderRadius: 3,
-    marginBottom: 4,
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 3,
-  },
-  progressPercentage: {
-    fontSize: 12,
-    color: '#64748b',
-    textAlign: 'right',
-  },
   courseStats: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginBottom: 20,
     paddingVertical: 16,
     backgroundColor: '#f8fafc',
     borderRadius: 12,
@@ -426,84 +365,5 @@ const styles = StyleSheet.create({
     color: '#64748b',
     marginLeft: 4,
     fontWeight: '500',
-  },
-  nextLesson: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#f8fafc',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 16,
-  },
-  nextLessonContent: {
-    flex: 1,
-  },
-  nextLessonLabel: {
-    fontSize: 12,
-    color: '#64748b',
-    marginBottom: 2,
-  },
-  nextLessonTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#0f172a',
-  },
-  playButton: {
-    borderRadius: 20,
-    padding: 10,
-  },
-  courseActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 8,
-  },
-  actionText: {
-    fontSize: 14,
-    color: '#64748b',
-    marginLeft: 4,
-    fontWeight: '500',
-  },
-  activitySection: {
-    paddingHorizontal: 20,
-    paddingBottom: 24,
-  },
-  activityCard: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  activityIcon: {
-    marginRight: 16,
-  },
-  activityDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-  },
-  activityContent: {
-    flex: 1,
-  },
-  activityTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#0f172a',
-    marginBottom: 2,
-  },
-  activityMeta: {
-    fontSize: 14,
-    color: '#64748b',
   },
 });
