@@ -17,60 +17,14 @@ export interface User {
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string, role: 'faculty' | 'student') => Promise<void>;
-  loginWithOTP: (phone: string, otp: string, role: 'faculty' | 'student') => Promise<void>;
-  loginWithId: (id: string, role: 'faculty' | 'student') => Promise<void>;
+  signup: (userData: Omit<User, 'id' | 'joinDate'>) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   updateProfile: (updates: Partial<User>) => void;
 }
 
-// Mock users for testing
-const mockUsers = {
-  faculty: [
-    {
-      id: 'f1',
-      name: 'Dr. Sarah Johnson',
-      email: 'sarah.johnson@university.edu',
-      role: 'faculty' as const,
-      department: 'Computer Science',
-      facultyId: 'FAC001',
-      phone: '+1234567890',
-      joinDate: '2020-08-15',
-    },
-    {
-      id: 'f2',
-      name: 'Prof. Mike Chen',
-      email: 'mike.chen@university.edu',
-      role: 'faculty' as const,
-      department: 'Information Technology',
-      facultyId: 'FAC002',
-      phone: '+1234567891',
-      joinDate: '2019-09-01',
-    },
-  ],
-  student: [
-    {
-      id: 's1',
-      name: 'John Doe',
-      email: 'john.doe@student.edu',
-      role: 'student' as const,
-      department: 'Computer Science',
-      studentId: 'STU001',
-      phone: '+1234567892',
-      joinDate: '2022-08-20',
-    },
-    {
-      id: 's2',
-      name: 'Emma Wilson',
-      email: 'emma.wilson@student.edu',
-      role: 'student' as const,
-      department: 'Information Technology',
-      studentId: 'STU002',
-      phone: '+1234567893',
-      joinDate: '2022-08-20',
-    },
-  ],
-};
+// Simple in-memory storage for demo
+let users: User[] = [];
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -78,49 +32,38 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       isAuthenticated: false,
 
-      login: async (email: string, password: string, role: 'faculty' | 'student') => {
+      signup: async (userData: Omit<User, 'id' | 'joinDate'>) => {
         // Simulate API call delay
         await new Promise(resolve => setTimeout(resolve, 1000));
         
-        const users = mockUsers[role];
+        // Check if user already exists
+        const existingUser = users.find(u => u.email === userData.email);
+        if (existingUser) {
+          throw new Error('User already exists with this email');
+        }
+        
+        const newUser: User = {
+          ...userData,
+          id: `${userData.role}_${Date.now()}`,
+          joinDate: new Date().toISOString(),
+        };
+        
+        users.push(newUser);
+        set({ user: newUser, isAuthenticated: true });
+      },
+
+      login: async (email: string, password: string) => {
+        // Simulate API call delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
         const user = users.find(u => u.email === email);
         
-        if (user && password === 'password123') {
-          set({ user, isAuthenticated: true });
-        } else {
-          throw new Error('Invalid credentials');
+        if (!user) {
+          throw new Error('No account found with this email');
         }
-      },
-
-      loginWithOTP: async (phone: string, otp: string, role: 'faculty' | 'student') => {
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
         
-        const users = mockUsers[role];
-        const user = users.find(u => u.phone === phone);
-        
-        if (user && otp === '123456') {
-          set({ user, isAuthenticated: true });
-        } else {
-          throw new Error('Invalid OTP');
-        }
-      },
-
-      loginWithId: async (id: string, role: 'faculty' | 'student') => {
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        const users = mockUsers[role];
-        const user = users.find(u => 
-          (role === 'faculty' && u.facultyId === id) || 
-          (role === 'student' && u.studentId === id)
-        );
-        
-        if (user) {
-          set({ user, isAuthenticated: true });
-        } else {
-          throw new Error('Invalid ID');
-        }
+        // For demo purposes, accept any password
+        set({ user, isAuthenticated: true });
       },
 
       logout: () => {
@@ -130,7 +73,14 @@ export const useAuthStore = create<AuthState>()(
       updateProfile: (updates: Partial<User>) => {
         const { user } = get();
         if (user) {
-          set({ user: { ...user, ...updates } });
+          const updatedUser = { ...user, ...updates };
+          set({ user: updatedUser });
+          
+          // Update in users array
+          const userIndex = users.findIndex(u => u.id === user.id);
+          if (userIndex !== -1) {
+            users[userIndex] = updatedUser;
+          }
         }
       },
     }),
